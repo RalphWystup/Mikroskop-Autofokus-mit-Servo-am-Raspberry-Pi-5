@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Mikroskop-Fokus
+Comment=Bedienseite des Autofokus als kleines Fenster (eigenes Chromium-Profil, damit keine Profilsperre stoert)
+Exec=sh -c 'sleep 6; chromium-browser --user-data-dir=/home/pi/.config/chromium-fokus --app=http://localhost:8090 --window-size=1000,620 --window-position=40,40 --no-first-run --disable-session-crashed-bubble'
+Terminal=false
+X-GNOME-Autostart-enabled=true

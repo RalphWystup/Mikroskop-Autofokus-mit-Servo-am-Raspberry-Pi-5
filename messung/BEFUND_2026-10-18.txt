@@ -1,0 +1,18 @@
+Messung 18.10.2026, Fadenalgen, USB-Mikroskop 640x480, Servo GPIO 18 (55 Hz, 0,40-2,40 ms)
+
+Stick-Slip, gemessen (wirksame Schritte von 6, Bildaenderung ueber Rauschschwelle):
+  Weite     Puls aus (altes Programm)   Puls bleibt an
+  0,1 Grad        1/6                        3/6
+  0,2 Grad        2/6                        6/6
+  0,5 Grad        4/6                        6/6
+  1,0 Grad        5/6                        6/6
+  2,0 Grad        5/6                        6/6
+-> Puls muss anbleiben; kleinster sicherer Schritt 0,2 Grad, besser 0,3-0,5.
+
+Schaerfekurve: ein einziger Gipfel bei 138 Grad, Halbwertsbreite 1,4-2,5 Grad, Fuss (>=5 %) 16-20 Grad breit,
+kein Nebenmaximum (ausserhalb +-10 Grad hoechstens 5 % des Gipfels).
+Schneller Lauf (0,25 Grad je 40 ms): Gipfel hin 140,75 / zurueck 136,0 = scheinbare Hysterese 4,75 Grad.
+Langsamer Lauf (0,2 Grad je 150 ms): Gipfel hin 138,0 / zurueck 138,0 = Hysterese 0,0 Grad.
+-> Das Spiel ist Nachlauf (Servo+Kamera), kein Getriebespiel. Vor jeder Messung >= 250 ms warten.
+Umkehrprobe: nach schnellen 0,2-Grad-Schritten (120 ms) stand der Servo 1,4 Grad hinter dem Befehl.
+-> Die Ist-Lage ist nur ueber die Schaerfe bekannt, nie ueber den befohlenen Winkel.

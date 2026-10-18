@@ -1,0 +1,193 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mikroskop-Fokus</title>
+<style>
+:root{--bg:#f4f3ef;--fg:#1d1d1b;--rand:#c9c6bd;--kasten:#fff;--grau:#6b6962;--blau:#1f4e9e;--rot:#b3261e}
+body{font:15px/1.45 system-ui,"Segoe UI",sans-serif;margin:0;background:var(--bg);color:var(--fg)}
+header{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;padding:10px 16px 0}
+header h1{font-size:20px;margin:0}header small{color:var(--grau)}
+nav{display:flex;gap:6px;padding:8px 16px 0;border-bottom:1.5px solid var(--rand);flex-wrap:wrap}
+nav button{font:inherit;padding:7px 14px;border:1px solid var(--rand);border-bottom:none;border-radius:8px 8px 0 0;background:#ebe9e3;cursor:pointer}
+nav button.an{background:var(--kasten);font-weight:600}
+section{display:none;padding:14px 16px}section.an{display:block}
+.k{display:grid;grid-template-columns:660px 1fr;gap:16px}@media(max-width:1100px){.k{grid-template-columns:1fr}}
+img.live{width:640px;max-width:100%;aspect-ratio:4/3;border:1px solid #999;background:#000}
+button.b{font:inherit;padding:9px 16px;margin:3px;border:1px solid #999;border-radius:6px;background:#fff;cursor:pointer}
+button.g{background:#e8f0fb;border-color:var(--blau)}button:disabled{opacity:.45}
+#stand{font-size:20px;margin:6px 0}canvas{background:#fff;border:1px solid #ccc;max-width:100%}
+pre.log{background:#fff;border:1px solid #ccc;padding:8px;height:250px;overflow:auto;font-size:12px;margin:0;white-space:pre-wrap}
+input[type=number]{font:inherit;padding:7px;width:70px}small{color:var(--grau)}
+.text{max-width:960px}.text h2{font-size:17px;margin:18px 0 6px}.text h3{font-size:15px;margin:14px 0 4px}
+.text table{border-collapse:collapse;margin:6px 0}.text td,.text th{border:1px solid var(--rand);padding:4px 9px;text-align:left;vertical-align:top}
+.f{font-family:"Cambria Math","Latin Modern Math",serif;font-size:16px;background:#fff;border:1px solid var(--rand);border-radius:6px;padding:6px 12px;margin:6px 0;display:inline-block}
+code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;height:auto}
+</style></head><body>
+<header><h1>Mikroskop-Fokus</h1><small>USB-Mikroskop am Raspberry Pi 5, Servo an Hardware-PWM · Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt · Fassung 4, 18.10.2026</small></header>
+<nav><button class="an" data-r="bedienen">Bedienen</button><button data-r="hardware">Hardware und Verschaltung</button><button data-r="beschreibung">Beschreibung und Ablauf</button><button data-r="manuskript">Manuskript: Methoden</button><button data-r="messung">Messungen</button><button data-r="zusammenarbeit">Zusammenarbeit mit der KI</button></nav>
+
+<section class="an" id="bedienen"><div class="k">
+<div><img class="live" id="bild" src="/strom"><div id="stand">–</div>
+<button class="b g" id="auto">Autofokus</button><button class="b g" id="nachfokus">Nachfokus</button><button class="b" id="stopp">Stopp</button> &nbsp; <button class="b" id="minus">− 0,3°</button><button class="b" id="plus">+ 0,3°</button><br>
+<label><input type="radio" name="h" id="h_stromlos" value="stromlos"> im Stand stromlos (still, ~1 von 10 Handschritten daneben)</label> &nbsp;
+<label><input type="radio" name="h" id="h_an" value="an"> im Stand Puls an (12 von 12, knurrt)</label><br>
+<input id="ziel" type="number" step="0.1" min="0" max="180" value="138"><button class="b" id="fahre">Fahre nach (von unten)</button> &nbsp; <button class="b" id="befund">Befund für die KI bündeln</button>
+<p><small>Hardware-PWM · Haltung im Stand wählbar · jedes Ziel wird von 5° darunter angefahren · Schritte mit kurzem Rütteln · Autofokus: Suchlauf ≈ 25 s, Stapel ≈ 20 s, Anfahrt ≈ 10 s · Nachfokus: nur Stapel ±8° um die jetzige Stellung ≈ 30 s · Ergebnis = Schärfe am Ende gegen die Parabelhöhe des Stapels (100 % = berechnete Spitze).</small></p></div>
+<div><canvas id="kurve" width="560" height="260"></canvas><div><small id="kinfo"></small></div><pre class="log" id="log"></pre></div></div></section>
+
+<section id="hardware"><div class="text">
+<h2>Der Aufbau</h2>
+<p>Ein einfaches USB-Mikroskop (Wandler Genesys Logic 05e3:f12b, 640 × 480 Bildpunkte, 30 Bilder/s, YUYV) hat ein Rändelrad zur Handverstellung der Schärfe. Dieses Rad wird nicht mehr von Hand gedreht, sondern von einem Modellbauservo über ein Zahnradpaar. Die Halterung ist im 3D-Druck gefertigt und trägt Mikroskop, Servo und beide Zahnräder in festem Abstand.</p>
+<table><tr><th>Teil</th><th>Angabe</th></tr>
+<tr><td>Rechner</td><td>Raspberry Pi 5 Model B, 4 GB, Raspberry Pi OS 12 (bookworm), Python 3.11, OpenCV 4.6; Name im Netz <code>mikroskop</code></td></tr>
+<tr><td>Kamera</td><td>USB-Mikroskop an USB 2.0, <code>/dev/video0</code>; Regler: Helligkeit, Kontrast, Gamma, Schärfe (bleiben auf Vorgabe)</td></tr>
+<tr><td>Servo</td><td>Modellbauservo, Stellbereich 0–180° bei Impulsen von 0,40 bis 2,40 ms, 50 Hz; Signal an GPIO 18 (Hardware-PWM, PWM0-Kanal 2), Versorgung 5 V, Masse gemeinsam mit dem Pi</td></tr>
+<tr><td>Getriebe</td><td>Kleines Zahnrad auf der Servowelle, großes Zahnrad auf der Welle, die das Rändelrad des Mikroskops mitnimmt: Untersetzung 1 : 2. Ein Grad am Servo sind 0,5° am Mikroskoprad.</td></tr>
+<tr><td>Halterung</td><td>3D-Druck; Zahnräder und Mitnahme am Rändelrad sind die Stellen, an denen das gemessene Spiel von 4,6° (am Servo) entsteht</td></tr></table>
+<h2>Verschaltung</h2>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" font-family="system-ui,Segoe UI,sans-serif" font-size="12" style="background:#fff;border:1px solid #c9c6bd;border-radius:8px">
+<defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6b6962"/></marker></defs>
+<rect x="16" y="40" width="220" height="130" rx="8" fill="#e6f4ea" stroke="#2e7d32" stroke-width="1.5"/><text x="28" y="62" font-weight="700" font-size="13">Raspberry Pi 5</text>
+<text x="28" y="84">USB 2.0 → Mikroskop</text><text x="28" y="104">GPIO 18 (Pin 12) → Servo Signal</text><text x="28" y="124">5 V (Pin 2) → Servo +</text><text x="28" y="144">GND (Pin 6) → Servo −</text><text x="28" y="162" fill="#6b6962">Ethernet/WLAN → Heimnetz, Port 8090</text>
+<rect x="330" y="40" width="200" height="130" rx="8" fill="#fff3c4" stroke="#c9a227" stroke-width="1.5"/><text x="342" y="62" font-weight="700" font-size="13">Servo</text>
+<text x="342" y="84">Signal: Puls 0,40–2,40 ms</text><text x="342" y="104">alle 20 ms (50 Hz)</text><text x="342" y="124">0° … 180°</text><text x="342" y="150" fill="#6b6962">kleines Zahnrad auf der Welle</text>
+<rect x="620" y="40" width="320" height="130" rx="8" fill="#e8f0fb" stroke="#1f4e9e" stroke-width="1.5"/><text x="632" y="62" font-weight="700" font-size="13">Mikroskop (USB)</text>
+<text x="632" y="84">großes Zahnrad (1 : 2) auf der Welle</text><text x="632" y="104">zum Rändelrad der Handverstellung</text><text x="632" y="124">Bild 640 × 480, 30 Bilder/s</text><text x="632" y="150" fill="#6b6962">Probe unter dem Objektiv</text>
+<line x1="236" y1="104" x2="330" y2="104" stroke="#6b6962" stroke-width="1.6" marker-end="url(#pf)"/><text x="283" y="96" text-anchor="middle" fill="#6b6962">3 Adern</text>
+<line x1="530" y1="104" x2="620" y2="104" stroke="#6b6962" stroke-width="1.6" marker-end="url(#pf)"/><text x="575" y="96" text-anchor="middle" fill="#6b6962">Zahnräder 1 : 2</text>
+<path d="M 780 170 L 780 220 L 126 220 L 126 170" fill="none" stroke="#6b6962" stroke-width="1.6" marker-end="url(#pf)"/><text x="450" y="240" text-anchor="middle" fill="#6b6962">USB: Bilder zurück zum Pi — der Regelkreis schließt sich über die Schärfe im Bild</text>
+<text x="16" y="282" fill="#6b6962">Hardware-PWM: /boot/firmware/config.txt → dtoverlay=pwm-2chan; GPIO 18 = /sys/class/pwm/pwmchip0/pwm2 (Periode 20 000 000 ns, Tastdauer in ns)</text>
+</svg>
+<h2>Was das Getriebe für die Regelung bedeutet</h2>
+<p>Die Untersetzung halbiert die Bewegung: 0,3° Servoschritt sind 0,15° am Rändelrad. Die Halbwertsbreite des Schärfegipfels von 1,4 bis 3° am Servo entspricht 0,7 bis 1,5° am Rad. Das Spiel von 4,6° am Servo (2,3° am Rad) ist größer als der Gipfel; darum muss jede Anfahrt aus derselben Richtung kommen, sonst landet der Servo neben dem Gipfel, obwohl der Befehl stimmt. Die Rückstellkraft, die den Servo im Stand knurren lässt, kommt aus Mikroskopmechanik und Zahneingriff; sie ist mit dem gewählten Aufbau nicht zu beseitigen, nur zu beherrschen (Haltung wählbar).</p>
+</div></section>
+
+<section id="beschreibung"><div class="text">
+<h2>Was das Programm ist</h2>
+<p>Auf dem Raspberry Pi läuft <code>autofokus4.py</code> als Dienst (<code>mikroskop-fokus.service</code>, startet beim Hochfahren). Es liest das USB-Mikroskop (640 × 480, 30 Bilder/s), berechnet für jedes Bild ein Schärfemaß, fährt den Servo über die Hardware-PWM des Pi 5 und liefert diese Seite unter <code>http://mikroskop:8090</code> aus. Der Browser zeigt nur an und schickt Befehle; alles Messen und Regeln geschieht im Programm.</p>
+<h2>Die Bedienelemente</h2>
+<table><tr><th>Element</th><th>Was es tut</th></tr>
+<tr><td>Livebild</td><td>Bild der Kamera mit Schärfezahl, Servowinkel und dem grünen Messfenster (ROI, mittlere 33 % jeder Kante).</td></tr>
+<tr><td>Autofokus</td><td>Voller Ablauf: Suchlauf über den ganzen Bereich, Stapel, Anfahrt, Ergebnis. Etwa 70 s.</td></tr>
+<tr><td>Nachfokus</td><td>Nur Stapel ±8° um die jetzige Stellung und Anfahrt. Etwa 30 s. Für kleine Änderungen, wenn der Gipfel schon in der Nähe liegt.</td></tr>
+<tr><td>Stopp</td><td>Bricht den laufenden Ablauf ab; der Servo bleibt, wo er ist.</td></tr>
+<tr><td>+ 0,3° / − 0,3°</td><td>Ein Handschritt. Beide Richtungen fahren erst 5° nach unten und kommen von unten auf den neuen Wert (etwa 9 s), damit das Getriebespiel immer auf derselben Seite liegt.</td></tr>
+<tr><td>Haltung im Stand</td><td>stromlos: still, das Getriebe hält durch Reibung, etwa jeder zehnte Handschritt geht daneben. Puls an: der Servo hält aktiv, trifft 12 von 12, knurrt dabei.</td></tr>
+<tr><td>Fahre nach</td><td>Fährt einen eingegebenen Winkel an, von unten.</td></tr>
+<tr><td>Befund für die KI bündeln</td><td>Schreibt Zustand, die letzten 60 Protokollzeilen, die letzte Kurve und das aktuelle Bild nach <code>~/Desktop/messung/befund_&lt;Zeit&gt;/</code>. Das ist das Paket, das die KI zur Analyse liest (Reiter Zusammenarbeit).</td></tr>
+<tr><td>Kurve</td><td>Schärfe über dem Winkel aus dem letzten Suchlauf oder Stapel; der rote Strich ist der berechnete Gipfel.</td></tr>
+<tr><td>Protokoll</td><td>Jede Meldung des Programms mit Uhrzeit; dieselben Zeilen stehen in <code>~/Desktop/messung/autofokus4_&lt;Datum&gt;.log</code>, alle Messpunkte in der <code>.csv</code> daneben.</td></tr></table>
+<h2>Der Ablauf „Autofokus"</h2>
+<ol>
+<li><b>Suchlauf.</b> Der Servo fährt auf 0°, dann gleichmäßig mit 8°/s bis 180°. Alle 0,3° wird die Schärfe notiert. Das Maximum dieser Kurve nennt die Gegend des Gipfels; wegen des Nachlaufs von Servo und Kamera liegt der wahre Gipfel einige Grad darunter. Ist das Maximum kleiner als das Dreifache des Medians (Fuß), gibt es keinen Gipfel und der Lauf endet mit Meldung.</li>
+<li><b>Stapel.</b> Der Servo fährt 12° unter die Gegend und steigt in Schritten von 0,3°. Jeder Schritt: Puls an, 150 ms Rütteln ±0,6°, Ziel setzen, 250 ms Ruhe, Schärfe als Mittel aus zwei Bildern. Sobald die Schärfe nach dem Maximum unter 40 % gefallen ist, endet der Stapel. Durch die sieben Punkte um das Maximum wird eine Parabel gelegt; ihr Scheitel ist der Gipfelwinkel, ihre Höhe die Bezugsgröße 100 %.</li>
+<li><b>Anfahrt.</b> Der Servo fährt 5° unter den Gipfel und steigt von dort, zuerst in 0,3°-, nahe dem Ziel in 0,2°-Schritten. Er hält an, sobald die gemessene Schärfe mindestens 92 % der Parabelhöhe erreicht. Fällt die Schärfe stattdessen nach dem Überschreiten von 60 % wieder unter 70 % des bisher Besten, ist der Gipfel überfahren; dann ein zweiter Versuch.</li>
+<li><b>Ergebnis.</b> Die Haltung wird eingestellt (stromlos oder Puls an), nach 0,4 s wird die Schärfe aus sechs Bildern gemittelt und als Anteil der Parabelhöhe gemeldet. Ab 85 % heißt es BESTANDEN, sonst NICHT ERREICHT mit der ehrlichen Zahl.</li></ol>
+<h2>Warum so und nicht einfacher</h2>
+<p>Alle Regeln stammen aus Messungen am Gerät am 18.10.2026 (Reiter Messungen): Software-PWM zittert, darum Hardware-PWM. Das Getriebe hat 4,6° Spiel, darum immer von unten. Kleine Schritte aus dem Stand bleiben hängen, darum das Rütteln. Der Servo läuft dem Befehl nach, darum 250 ms Ruhe vor jeder Messung und die Trennung von Suchlauf und Stapel. Der befohlene Winkel ist nie die Ist-Lage, darum entscheidet am Ende nur die gemessene Schärfe.</p>
+</div></section>
+
+<section id="manuskript"><div class="text">
+<h2>1 · Das Schärfemaß</h2>
+<p>Ein scharfes Bild hat steile Kanten, ein unscharfes flache. Das Maß dafür ist die Energie des Bildgradienten. Im Messfenster (ROI) wird das Graubild <i>I</i>(x,y) mit den Sobel-Kernen gefaltet:</p>
+<div class="f">G<sub>x</sub> = I ∗ [[−1 0 1],[−2 0 2],[−1 0 1]] , &nbsp; G<sub>y</sub> = I ∗ [[−1 −2 −1],[0 0 0],[1 2 1]]</div>
+<p>und das Tenengrad-Maß ist der Mittelwert der quadrierten Gradientenlänge:</p>
+<div class="f">S = (1/N) · Σ<sub>ROI</sub> ( G<sub>x</sub>² + G<sub>y</sub>² )</div>
+<p>Es wird nicht normiert und nicht begrenzt. Das frühere Programm teilte durch 15 000 und schnitt bei 1,0 ab; dadurch wurde der Gipfel zu einem Plateau von mehr als 10° Breite, in dem der Regler das Maximum nicht sehen konnte. Pertuz, Puig und García (Pattern Recognition 46, 2013) vergleichen 36 Schärfeoperatoren; Tenengrad gehört zu den dreien mit dem besten Verhältnis von Empfindlichkeit zu Rauschfestigkeit. Gemessen am Gerät: Streuung von Bild zu Bild ohne Bewegung 0,7 bis 2,6 % des Mittelwerts, Fuß (weit außerhalb des Fokus) etwa 200, Gipfel etwa 9 000, also ein Verhältnis von 45 : 1.</p>
+<h2>2 · Die Form des Gipfels und die Parabel</h2>
+<p>Die Schärfe über dem Servowinkel <i>a</i> hat bei dieser Probe einen einzigen Gipfel mit Halbwertsbreite 1,4 bis 3° und einem Fuß von 16 bis 20° (ab 5 % der Höhe). Nahe dem Scheitel ist jede glatte Kurve durch ihre Taylor-Entwicklung zweiter Ordnung beschrieben, also eine Parabel:</p>
+<div class="f">S(a) ≈ p<sub>0</sub> a² + p<sub>1</sub> a + p<sub>2</sub> , &nbsp; a* = −p<sub>1</sub> / (2 p<sub>0</sub>) , &nbsp; S* = S(a*)</div>
+<p>Die Koeffizienten kommen aus der Methode der kleinsten Quadrate über die sieben Stapelpunkte um das gemessene Maximum (drei links, drei rechts). Gültig ist die Anpassung nur für p<sub>0</sub> &lt; 0 (nach unten offen); sonst bleibt das gemessene Maximum der Gipfel. Der Scheitel liegt zwischen den Rasterpunkten und ist genauer als der Rasterabstand 0,3°; die Höhe S* ist die Bezugsgröße, auf die das Ergebnis in Prozent bezogen wird. Deshalb kann ein Ergebnis knapp über 100 % liegen, wenn die Anfahrt zufällig näher an der wahren Spitze hält als die Parabel schätzt.</p>
+<h2>3 · Der Servo und seine Ansteuerung</h2>
+<p>Ein Modellbauservo stellt den Winkel nach der Breite eines Impulses, der alle 20 ms (50 Hz) wiederholt wird. Für diesen Servo gilt die lineare Zuordnung</p>
+<div class="f">t<sub>Puls</sub>(a) = 0,40 ms + (a / 180°) · 2,00 ms , &nbsp; a ∈ [0°, 180°]</div>
+<p>also 11,1 µs je Grad. Die Impulse erzeugt die Hardware-PWM des RP1-Bausteins (GPIO 18 = PWM0-Kanal 2, Freigabe über <code>dtoverlay=pwm-2chan</code>); Periode und Tastdauer werden in Nanosekunden geschrieben, die Auflösung ist damit weit feiner als der Totbereich des Servos. Software-PWM aus dem Benutzerraum (RPi.GPIO über lgpio) hat Impulsbreitenschwankungen im Bereich einiger Mikrosekunden, die der Servo als Sollwertänderungen von Bruchteilen eines Grads deutet und dauernd nachregelt: gemessen ±47 bis 63 % Schärfeschwankung im Stand gegenüber ±0,7 bis 0,9 % mit Hardware-PWM. Mit der Untersetzung 1 : 2 wird aus 11,1 µs je Servograd 22,2 µs je Grad am Rändelrad.</p>
+<h2>4 · Spiel, Hysterese und die Regel „immer von unten"</h2>
+<p>Zwischen Servoabtrieb, Zahnradpaar und Rändelrad liegt Spiel. Modell: die Ist-Lage <i>a</i><sub>ist</sub> folgt dem Befehl <i>a</i> um einen richtungsabhängigen Betrag <i>b</i> versetzt,</p>
+<div class="f">a<sub>ist</sub> = a − b<sub>↑</sub> beim Aufwärtsfahren , &nbsp; a<sub>ist</sub> = a + b<sub>↓</sub> beim Abwärtsfahren , &nbsp; b<sub>↑</sub> + b<sub>↓</sub> ≈ 4,6°</div>
+<p>Gemessen als Abstand der Gipfel im langsamen Hin- und Rücklauf: 4,6° (Hardware-PWM, 0,2° je 150 ms). Rütteln während der Fahrt verringert den Wert nur auf 3,2°; es ist mechanisches Spiel. Wird jedes Ziel ausschließlich aufwärts angefahren, ist <i>b</i> konstant und fällt aus allen Differenzen heraus: Gipfelwinkel und Anfahrt sind dann im selben Koordinatensystem. Das ist die Regel von Knapper et al. (Journal of Microscopy 2022) für das OpenFlexure-Mikroskop, dort mit 137 Schritten Spiel am Schrittmotor. Darum beginnt jede Anfahrt 5° unterhalb des Ziels, und auch der Handschritt „−0,3°" fährt 5° hinunter und kommt von unten.</p>
+<h2>5 · Haftreibung und das Rütteln</h2>
+<p>Ein kleiner Schritt aus dem Stand muss die Haftreibung überwinden, die größer ist als die Gleitreibung (Stick-Slip). Gemessen mit Hardware-PWM: ein Schritt von 0,2° bewegt das Bild in 1 von 6 Fällen, 0,3° in 3 von 6, erst 0,5° in 6 von 6. Wird der Sollwert während 150 ms alle 25 ms zwischen <i>a</i> + 0,6° und <i>a</i> − 0,6° gewechselt und dann auf <i>a</i> gesetzt, bricht der Servo los und folgt: 0,2° in 6 von 6, 0,1° in 5 von 6 Fällen. Die Rüttelamplitude bleibt unter dem Spiel, darum ändert sie die Richtung der Vorspannung nicht. Eine Ausnahme ist gemessen: Rütteln am Gipfel, nachdem das Getriebe von unten gespannt wurde, ließ es in einem Schritt um sein Spiel zurückschnappen (Schärfe 8 813 → 193). Seitdem rüttelt kein Schritt mehr an der Stelle, jeder Handschritt nimmt den Umweg von unten.</p>
+<h2>6 · Nachlauf und Messzeitpunkt</h2>
+<p>Servo und Kamera folgen dem Befehl verzögert. Im schnellen Lauf (6°/s, 0,25° je 40 ms) erschien der Gipfel hin bei 140,75° und zurück bei 136,0°; im langsamen Lauf mit Software-PWM an derselben Stelle. Der Unterschied von 4,75° war Nachlauf, kein Spiel: Der Befehl war dem Servo voraus, die Kamera dem Bild um ein bis zwei Bilder hinterher. Daraus folgt: nach jedem Schritt 250 ms Ruhe, dann zwei Bilder verwerfen, dann messen; und der schnelle Suchlauf liefert nur die Gegend, nie den Gipfel. Die Umkehrprobe bestätigte es: nach 0,2°-Schritten im 120-ms-Takt stand der Servo 1,4° hinter dem Befehl.</p>
+<h2>7 · Der Regler als Ganzes</h2>
+<p>Die Aufgabe ist, das Maximum einer unbekannten, eingipfligen Funktion S(a) mit einem Stellglied zu finden, dessen Ist-Lage nicht messbar ist. Der Suchlauf tastet S grob über den ganzen Bereich ab (Kosten: 25 s, Gewinn: keine Annahme über die Lage). Der Stapel misst S im Fuß des Gipfels auf dem 0,3°-Raster und liefert über die Parabel Scheitel und Höhe. Die Anfahrt schließt den Kreis über die Messgröße selbst: Sie endet nicht am berechneten Winkel, sondern dort, wo S ≥ 0,92 · S* gemessen wird. Damit ist das Ergebnis gegen Spiel, Nachlauf und Streuung der Ist-Lage unempfindlich, denn alle drei wirken nur auf den Winkel, nicht auf die Schärfe. Zahlen vom 18.10.2026: sechs Läufe hintereinander, Ergebnis 93 bis 105 % der Parabelhöhe, Gipfelwinkel 139,6 bis 140,1°, Dauer 70 s. Nachfokus 30 s.</p>
+<h2>8 · Halten im Stand</h2>
+<p>Nach dem Fokus bleibt eine Rückstellkraft auf dem Getriebe. Mit Puls hält der Servo dagegen und regelt hörbar nach (Knurren), die Stellung bleibt: 60 s ohne Sprung, 12 von 12 Handschritten getroffen. Stromlos hält nur die Reibung: 20 s Streuung 0,7 %, aber gelegentlich rutscht das Getriebe um sein Spiel ab, und der nächste Handschritt geht von einer falschen Stellung aus (1 von 10). Beide Haltungen sind auf der Seite wählbar; der Autofokus fährt immer mit Puls und schaltet erst am Ende um.</p>
+<h2>Quellen</h2>
+<ul><li>J. Knapper et al., Fast, high-precision autofocus on a motorised microscope: automating blood sample imaging on the OpenFlexure Microscope, Journal of Microscopy 285 (2022); arXiv 2109.06842.</li>
+<li>S. Pertuz, D. Puig, M. A. García, Analysis of focus measure operators for shape-from-focus, Pattern Recognition 46 (2013) 1415–1432.</li>
+<li>Raspberry Pi Foundation, RP1 PWM und <code>pwm-2chan</code>-Overlay; Raspberry-Pi-Forum zu Servo-Jitter mit Software-PWM.</li></ul>
+</div></section>
+
+<section id="messung"><div class="text">
+<h2>Messungen vom 18.10.2026, Probe Fadenalgen</h2>
+<table><tr><th>Messung</th><th>Ergebnis</th></tr>
+<tr><td>Einzelschritte, Software-PWM, Puls aus (altes Programm)</td><td>0,1° 1/6 · 0,2° 2/6 · 0,5° 4/6 · 1° 5/6 · 2° 5/6 wirksam</td></tr>
+<tr><td>Einzelschritte, Software-PWM, Puls an</td><td>0,1° 3/6 · 0,2° 6/6 · 0,5° 6/6</td></tr>
+<tr><td>Schärfekurve schnell (0,25° je 40 ms)</td><td>Gipfel hin 140,75° / zurück 136,0°, Halbwertsbreite 2,5°, scheinbare Hysterese 4,75° (Nachlauf)</td></tr>
+<tr><td>Schärfekurve langsam, Software-PWM</td><td>Gipfel 138,0° in beiden Richtungen, Halbwertsbreite 1,4° hin, 4,8° zurück (Zittern verdeckt das Spiel)</td></tr>
+<tr><td>Halten mit Software-PWM, Puls an</td><td>Schärfe ±47 bis 63 %</td></tr>
+<tr><td>Hardware-PWM, Halten, Puls an</td><td>±0,9 % (15 s), 60 s ohne Sprung ±0,7 %</td></tr>
+<tr><td>Hardware-PWM, Halten, stromlos</td><td>±0,7 % (20 s)</td></tr>
+<tr><td>Hardware-PWM, Hysterese langsam</td><td>4,6°; mit Rütteln ±0,3/0,6/1,0°: 4,2 / 3,8 / 3,2°</td></tr>
+<tr><td>Hardware-PWM, Einzelschritte aus dem Stand</td><td>0,1° 0/6 · 0,2° 1/6 · 0,3° 3/6 · 0,5° 6/6; mit Rütteln ±0,6°: 0,1° 5/6 · 0,2° 6/6 · 0,3° 6/6</td></tr>
+<tr><td>Autofokus 4, sechs Läufe</td><td>93 bis 105 % der Parabelhöhe, Gipfel 139,6 bis 140,1°, 70 s</td></tr>
+<tr><td>Handschritte, Puls an</td><td>12 von 12 auf dem Hang, dreimal 139,93°: 8964 / 8989 / 8955</td></tr>
+<tr><td>Handschritte, stromlos</td><td>9 von 10 (ein Abrutschen um das Spiel)</td></tr></table>
+<p>Rohdaten: <code>~/Desktop/messung/</code> — kurve_*.csv, fein_*.csv, schritte_*.csv, hw_fein_*.csv, dither_*.csv, autofokus4_*.csv, schaerfekurve_2026-10-18.png, BEFUND_2026-10-18.txt.</p>
+</div></section>
+
+<section id="zusammenarbeit"><div class="text">
+<h2>Wie die KI zugeschaltet wird</h2>
+<p>Die KI (Claude in Claude Code) läuft auf einem Server außerhalb des Heimnetzes und hat keinen eigenen Weg zum Pi. Der Weg führt über den Arbeitsrechner des Auftraggebers: Dort läuft die <b>Brücke</b> (<code>C:\Bruecke</code>), ein Programm, das Befehle vom Server abholt, ausführt und die Antwort zurückgibt. Für den Pi liegt daneben <code>pi.py</code>, das per SSH mit Schlüssel (kein Passwort gespeichert) einen Auftrag aus <code>pi_auftrag.txt</code> auf dem Pi ausführt und dessen Ausgabe zurückbringt. Alles, was die KI am Pi tut, geht durch diese zwei Dateien und ist dort nachlesbar.</p>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" font-family="system-ui,Segoe UI,sans-serif" font-size="12" style="background:#fff;border:1px solid #c9c6bd;border-radius:8px">
+<defs><marker id="p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6b6962"/></marker></defs>
+<text x="16" y="26" font-size="15" font-weight="700">Struktur der Zusammenarbeit — wer wo läuft und was wohin fließt</text>
+<rect x="16" y="46" width="250" height="150" rx="8" fill="#efe6f7" stroke="#6a3d9a" stroke-width="1.5"/><text x="28" y="68" font-weight="700" font-size="13">Server (Claude Code)</text>
+<text x="28" y="90">Claude: liest Protokolle, misst,</text><text x="28" y="107">rechnet, schreibt Programme</text><text x="28" y="124">Arbeitskopie: /workspace/Mikroskop_Pi5</text><text x="28" y="141">Gedächtnis über das Projekt</text><text x="28" y="170" fill="#6b6962">kein Zugang ins Heimnetz</text>
+<rect x="355" y="46" width="250" height="150" rx="8" fill="#fff3c4" stroke="#c9a227" stroke-width="1.5"/><text x="367" y="68" font-weight="700" font-size="13">Arbeitsrechner (Windows)</text>
+<text x="367" y="90">C:\Bruecke\bruecke.py — holt Befehle</text><text x="367" y="107">vom Server, führt sie aus</text><text x="367" y="124">C:\Bruecke\pi.py — SSH zum Pi</text><text x="367" y="141">pi_auftrag.txt — der Auftrag</text><text x="367" y="158">pi_key — der Schlüssel</text><text x="367" y="183" fill="#6b6962">Browser: http://mikroskop:8090</text>
+<rect x="694" y="46" width="250" height="150" rx="8" fill="#e6f4ea" stroke="#2e7d32" stroke-width="1.5"/><text x="706" y="68" font-weight="700" font-size="13">Raspberry Pi 5 „mikroskop"</text>
+<text x="706" y="90">Dienst mikroskop-fokus</text><text x="706" y="107">autofokus4.py: Kamera, Schärfe,</text><text x="706" y="124">Servo (Hardware-PWM), Seite :8090</text><text x="706" y="141">~/Desktop/messung: Protokoll, CSV,</text><text x="706" y="158">Befund-Pakete</text><text x="706" y="183" fill="#6b6962">USB-Mikroskop · Servo GPIO 18</text>
+<line x1="266" y1="110" x2="355" y2="110" stroke="#6b6962" stroke-width="1.6" marker-end="url(#p)" marker-start="url(#p)"/><text x="310" y="100" text-anchor="middle" fill="#6b6962">Brücke (Internet, Abholung)</text>
+<line x1="605" y1="110" x2="694" y2="110" stroke="#6b6962" stroke-width="1.6" marker-end="url(#p)" marker-start="url(#p)"/><text x="650" y="100" text-anchor="middle" fill="#6b6962">SSH, Schlüssel</text>
+<rect x="16" y="226" width="928" height="176" rx="8" fill="#f4f3ef" stroke="#a19e94" stroke-width="1.2"/><text x="28" y="248" font-weight="700" font-size="13">Ablauf einer Zuschaltung</text>
+<text x="28" y="272">1. Der Auftraggeber beschreibt das Problem im Chat und drückt auf der Seite „Befund für die KI bündeln" (oder die KI holt sich Protokoll und CSV selbst).</text>
+<text x="28" y="292">2. Die KI liest über Brücke und pi.py: Protokoll, Messpunkte, Bild, Zustand des Dienstes. Sie bewegt den Servo nur, wenn der Auftraggeber es erlaubt hat.</text>
+<text x="28" y="312">3. Analyse mit Zahlen: Was ist gemessen, was daraus folgt, was offen bleibt. Literatur und bekannte Lösungen vor eigenen Ansätzen.</text>
+<text x="28" y="332">4. Eine Änderung wird zuerst in der Arbeitskopie geschrieben, dann als Datei auf den Pi gebracht (cat-Heredoc über pi.py), der Dienst neu gestartet.</text>
+<text x="28" y="352">5. Nachmessen am Gerät, die Zahlen ins Protokoll, auf diese Seite (Reiter Messungen) und ins Gedächtnis der KI. Erst dann gilt die Änderung.</text>
+<text x="28" y="378" fill="#6b6962">Was die KI nie tut: Passwörter speichern (der Schlüssel ersetzt es), Dateien löschen ohne Wort, am Pi etwas installieren oder neu starten ohne Wort.</text>
+</svg>
+<h2>Was die KI sieht und was nicht</h2>
+<table><tr><th>Sichtbar für die KI</th><th>Nicht sichtbar</th></tr>
+<tr><td>Protokoll und CSV des Dienstes, jedes Einzelbild auf Anforderung (als Datei, kein Livestrom), Zustand über <code>/status</code>, die Kurven, alle Messskripte und ihre Ergebnisse in <code>~/Desktop/messung</code></td><td>Der Bildschirm des Pi, Geräusche des Servos, die Mechanik, der Browser des Auftraggebers. Darum sind Beobachtungen wie „es knurrt" oder „es zischt" wichtige Messwerte, die nur der Mensch liefern kann.</td></tr></table>
+<h2>Wie eine Korrektur abläuft, konkret</h2>
+<ol><li>Im Chat: „Bei Minus springt er" — oder „Befund bündeln" auf der Seite drücken.</li>
+<li>Die KI holt <code>befund_&lt;Zeit&gt;/</code> vom Pi (Zustand, Protokoll, Kurve, Bild), liest und vergleicht mit den Messungen auf dieser Seite.</li>
+<li>Bei Bedarf eine gezielte Messung (eigenes Skript in <code>~/Desktop/messung</code>, Servo bewegt sich — nur mit Erlaubnis).</li>
+<li>Änderung in <code>autofokus4.py</code> oder <code>seite.html</code>, auf den Pi, Dienst neu starten: <code>sudo systemctl restart mikroskop-fokus</code>.</li>
+<li>Nachmessen, Zahlen hier eintragen. Der Auftraggeber prüft am Gerät.</li></ol>
+<h2>Dateien auf dem Pi</h2>
+<table><tr><th>Ort</th><th>Inhalt</th></tr>
+<tr><td><code>~/Desktop/autofokus4/</code></td><td>autofokus4.py, seite.html, autofokus4.out (Konsole des Dienstes)</td></tr>
+<tr><td><code>/etc/systemd/system/mikroskop-fokus.service</code></td><td>der Dienst; <code>systemctl status mikroskop-fokus</code></td></tr>
+<tr><td><code>~/Desktop/messung/</code></td><td>Messungen, Protokolle, CSV, Bilder, Befund-Pakete</td></tr>
+<tr><td><code>~/.config/autostart/mikroskop-fokus.desktop</code></td><td>öffnet die Seite beim Anmelden als Fenster auf dem Desktop (auch bei Remote-Desktop)</td></tr>
+<tr><td><code>/boot/firmware/config.txt</code></td><td><code>dtoverlay=pwm-2chan</code> für die Hardware-PWM (Sicherung config.txt.vor_pwm_2026-10-18)</td></tr>
+<tr><td><code>~/.ssh/authorized_keys</code></td><td>der öffentliche Schlüssel der Brücke (Zeile „bruecke")</td></tr></table>
+</div></section>
+
+<script>
+const $=i=>document.getElementById(i);
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('an',x===b));document.querySelectorAll('section').forEach(s=>s.classList.toggle('an',s.id===b.dataset.r));});
+async function befehl(art,wert){await fetch('/befehl',{method:'POST',body:JSON.stringify({art,wert})});}
+$('auto').onclick=()=>befehl('auto');$('nachfokus').onclick=()=>befehl('nachfokus');$('h_stromlos').onchange=()=>befehl('haltung','stromlos');$('h_an').onchange=()=>befehl('haltung','an');$('stopp').onclick=()=>befehl('stopp');$('plus').onclick=()=>befehl('plus');$('minus').onclick=()=>befehl('minus');$('fahre').onclick=()=>befehl('nach',parseFloat($('ziel').value));$('befund').onclick=()=>befehl('befund');
+function zeichne(k,maxw){const c=$('kurve'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);if(!k.length)return;const xs=k.map(p=>p[0]),ys=k.map(p=>p[1]);const x0=Math.min(...xs),x1=Math.max(...xs),y1=Math.max(...ys)||1;
+x.strokeStyle='#1f4e9e';x.beginPath();k.forEach((p,i)=>{const px=30+(p[0]-x0)/((x1-x0)||1)*520,py=240-p[1]/y1*220;i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke();
+x.fillStyle='#666';x.font='11px sans-serif';x.fillText(x0.toFixed(1)+'°',30,255);x.fillText(x1.toFixed(1)+'°',520,255);x.fillText(y1.toFixed(0),2,14);
+if(maxw!=null&&maxw>=x0&&maxw<=x1){const px=30+(maxw-x0)/((x1-x0)||1)*520;x.strokeStyle='#b3261e';x.beginPath();x.moveTo(px,20);x.lineTo(px,240);x.stroke();}}
+async function tick(){try{const z=await (await fetch('/status')).json();$('stand').textContent=`Schärfe ${z.schaerfe.toFixed(0)} · Winkel ${z.winkel==null?'–':z.winkel.toFixed(2)+'°'} · ${z.puls?'Puls an':'stromlos'} · ${z.phase}`+(z.max?` · Max ${z.max.toFixed(0)} bei ${z.max_winkel.toFixed(2)}°`:'')+(z.ergebnis?` · Ergebnis ${z.ergebnis}`:'');
+for(const b of ['auto','nachfokus','plus','minus','fahre','h_stromlos','h_an'])$(b).disabled=z.lauf;if(document.activeElement.name!=='h'){$('h_stromlos').checked=z.stromlos;$('h_an').checked=!z.stromlos;}
+zeichne(z.kurve,z.max_winkel);$('kinfo').textContent=(z.kurve.length?`Kurve: ${z.kurve.length} Punkte · `:'')+`Kamera ${z.fps.toFixed(0)} Bilder/s`;
+const l=$('log');const unten=l.scrollTop+l.clientHeight>=l.scrollHeight-10;l.textContent=z.meldungen.join('\n');if(unten)l.scrollTop=l.scrollHeight;}catch(e){$('stand').textContent='Programm antwortet nicht — läuft der Dienst mikroskop-fokus?';}}
+setInterval(tick,400);tick();
+</script></body></html>

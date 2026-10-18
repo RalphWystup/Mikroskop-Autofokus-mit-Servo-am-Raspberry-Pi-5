@@ -7,3 +7,10 @@
 5. Rechnername: `sudo hostnamectl set-hostname mikroskop`, Eintrag `127.0.1.1 mikroskop` in `/etc/hosts`. Die Seite ist dann unter `http://mikroskop:8090` erreichbar.
 
 Braucht: Raspberry Pi OS 12, Python 3 mit OpenCV und NumPy (im Standard-Image enthalten). Keine weiteren Pakete.
+
+## Der Weg der KI (optional)
+
+`bruecke/pi.py` läuft auf dem Windows-Arbeitsrechner neben der Brücke (Repositorium „KI-steuert-lokale-Hardware-ueber-eine-Bruecke") und
+braucht die Python-Räder paramiko, bcrypt und pynacl im selben Ordner (werden beim ersten Lauf nach `pylib/` entpackt). `python pi.py einrichten`
+legt einen SSH-Schlüssel an und trägt ihn auf dem Pi ein; danach `python pi.py` mit dem Auftrag in `pi_auftrag.txt`. Für den Betrieb des
+Mikroskops ist das nicht nötig.

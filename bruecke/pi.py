@@ -55,10 +55,25 @@ def einrichten():
     return 0
 
 
+HOCHLADEN = H / "pi_hochladen.txt"     # Zeilen „lokaler Name -> /pfad/auf/dem/pi": Dateien aus C:\Bruecke per SFTP vor dem Auftrag (grosse Dateien, 19.10.2026)
+
+
+def hochladen(c):
+    if not HOCHLADEN.is_file(): return
+    sftp = c.open_sftp()
+    for z in HOCHLADEN.read_text(encoding="utf-8").splitlines():
+        if "->" not in z: continue
+        lokal, _, ziel = z.partition("->"); lokal = H / lokal.strip(); ziel = ziel.strip()
+        if not lokal.is_file(): print(f"hochladen: {lokal.name} fehlt"); continue
+        try: sftp.put(str(lokal), ziel); print(f"hochladen: {lokal.name} -> {ziel} ({lokal.stat().st_size} Byte)")
+        except OSError as e: print(f"hochladen: {lokal.name} -> {ziel}: {e}")
+    sftp.close(); HOCHLADEN.unlink()
+
+
 def auftrag():
     if not AUFTRAG.is_file():
         print("pi_auftrag.txt fehlt"); return 1
-    c = verbinden(); rc, o, e = lauf(c, AUFTRAG.read_text(encoding="utf-8")); c.close()
+    c = verbinden(); hochladen(c); rc, o, e = lauf(c, AUFTRAG.read_text(encoding="utf-8")); c.close()
     print(o, end=""); 
     if e.strip(): print("[stderr]", e.strip()[-2000:])
     print(f"[rc {rc}]"); return rc

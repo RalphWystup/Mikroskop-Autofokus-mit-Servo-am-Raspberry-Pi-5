@@ -268,6 +268,14 @@ class H(http.server.BaseHTTPRequestHandler):
                         self.wfile.write(b"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: " + str(len(b)).encode() + b"\r\n\r\n" + b + b"\r\n"); letzte = b
                     time.sleep(0.06)
             except (BrokenPipeError, ConnectionResetError): pass
+        elif p.startswith("/bilder/") and "/.." not in p:
+            # Fotos des Aufbaus neben dem Programm (bilder/), fuer die Seite; nur dieser Ordner
+            d = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bilder", os.path.basename(p))
+            try:
+                with open(d, "rb") as f: b = f.read()
+                self.send_response(200); self.send_header("Content-Type", "image/jpeg" if d.endswith(".jpg") else "image/png"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+            except OSError:
+                self.send_response(404); self.end_headers()
         else:
             self.send_response(404); self.end_headers()
 

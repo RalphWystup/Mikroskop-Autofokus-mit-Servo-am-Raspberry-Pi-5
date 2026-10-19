@@ -1,6 +1,6 @@
 # Hardware — was zum Nachbau gehört
 
-Stand 18.10.2026. Gemessen und bekannt:
+Stand 19.10.2026. Fotos des Aufbaus: `../bilder/aufbau_seite.jpg`, `../bilder/aufbau_oben.jpg`. Gemessen und bekannt:
 
 | Teil | Angabe |
 |:--|:--|

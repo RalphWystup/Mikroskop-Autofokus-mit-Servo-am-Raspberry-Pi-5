@@ -9,7 +9,9 @@ nav button{font:inherit;padding:7px 14px;border:1px solid var(--rand);border-bot
 nav button.an{background:var(--kasten);font-weight:600}
 section{display:none;padding:14px 16px}section.an{display:block}
 .k{display:grid;grid-template-columns:660px 1fr;gap:16px}@media(max-width:1100px){.k{grid-template-columns:1fr}}
-img.live{width:640px;max-width:100%;aspect-ratio:4/3;border:1px solid #999;background:#000}
+.zoomrahmen{width:640px;max-width:100%;aspect-ratio:4/3;border:1px solid #999;background:#000;overflow:hidden;position:relative;cursor:grab;touch-action:none}
+img.live{width:100%;height:100%;display:block;transform-origin:0 0;user-select:none}
+.zoomzeile{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}.zoomzeile input[type=range]{width:160px}
 button.b{font:inherit;padding:9px 16px;margin:3px;border:1px solid #999;border-radius:6px;background:#fff;cursor:pointer}
 button.g{background:#e8f0fb;border-color:var(--blau)}button:disabled{opacity:.45}
 #stand{font-size:20px;margin:6px 0}canvas{background:#fff;border:1px solid #ccc;max-width:100%}
@@ -20,11 +22,13 @@ input[type=number]{font:inherit;padding:7px;width:70px}small{color:var(--grau)}
 .f{font-family:"Cambria Math","Latin Modern Math",serif;font-size:16px;background:#fff;border:1px solid var(--rand);border-radius:6px;padding:6px 12px;margin:6px 0;display:inline-block}
 code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;height:auto}
 </style></head><body>
-<header><h1>Mikroskop-Fokus</h1><small style="color:#b3261e">Diese Seite ist die Beschreibung. Das Livebild und die Knöpfe arbeiten nur auf dem Pi unter http://mikroskop:8090 — hier ist der Reiter „Bedienen" ein Standbild.</small><small>USB-Mikroskop am Raspberry Pi 5, Servo an Hardware-PWM · Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt · Fassung 4, 18.10.2026</small></header>
+<header><h1>Mikroskop-Fokus</h1><small style="color:#b3261e">Diese Seite ist die Beschreibung. Das Livebild und die Knöpfe arbeiten nur auf dem Pi unter http://mikroskop:8090 — hier ist der Reiter „Bedienen" ein Standbild (der Zoom geht).</small><small>USB-Mikroskop am Raspberry Pi 5, Servo an Hardware-PWM · Prof. Dr.-Ing. Ralph Wystup M.Sc. und Claude (Anthropic, Claude Code) — gemeinsam erstellt · Fassung 4, 18.10.2026</small></header>
 <nav><button class="an" data-r="bedienen">Bedienen</button><button data-r="hardware">Hardware und Verschaltung</button><button data-r="beschreibung">Beschreibung und Ablauf</button><button data-r="manuskript">Manuskript: Methoden</button><button data-r="messung">Messungen</button><button data-r="zusammenarbeit">Zusammenarbeit mit der KI</button></nav>
 
 <section class="an" id="bedienen"><div class="k">
-<div><img class="live" id="bild" src="bilder/fokus_fadenalgen_2026-10-18.jpg" alt="Fadenalgen im Fokus, 18.10.2026"><div id="stand">–</div>
+<div><div class="zoomrahmen" id="zoomrahmen"><img class="live" id="bild" src="bilder/fokus_fadenalgen_2026-10-18.jpg" alt="Fadenalgen im Fokus, 18.10.2026" draggable="false"></div>
+<div class="zoomzeile"><small>Zoom</small> <input type="range" id="zoom" min="1" max="6" step="0.1" value="1"> <span id="zoomwert">1,0×</span> <button class="b" id="zoom1">1×</button> <button class="b" id="zoom_mitte">Mitte</button> <small>Mausrad zoomt, Ziehen verschiebt, Doppelklick zoomt auf die Stelle — rein elektronisch, nur die Anzeige</small></div>
+<div id="stand">–</div>
 <button class="b g" id="auto">Autofokus</button><button class="b g" id="nachfokus">Nachfokus</button><button class="b" id="stopp">Stopp</button> &nbsp; <button class="b" id="minus">− 0,3°</button><button class="b" id="plus">+ 0,3°</button><br>
 <label><input type="radio" name="h" id="h_stromlos" value="stromlos"> im Stand stromlos (still, ~1 von 10 Handschritten daneben)</label> &nbsp;
 <label><input type="radio" name="h" id="h_an" value="an"> im Stand Puls an (12 von 12, knurrt)</label><br>
@@ -34,6 +38,9 @@ code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;hei
 
 <section id="hardware"><div class="text">
 <h2>Der Aufbau</h2>
+<p><img src="bilder/aufbau_seite.jpg" alt="Aufbau von der Seite: Raspberry Pi 5 im Acrylgehäuse, USB-Mikroskop im 3D-gedruckten Halter, Servo oben, Objektträger auf dem Fuß" style="max-width:100%;border:1px solid #c9c6bd;border-radius:8px"></p>
+<p><img src="bilder/aufbau_oben.jpg" alt="Aufbau von oben: Servo mit Zahnrad am Rändelrad des Mikroskops, Beleuchtung über den Schwanenhals" style="max-width:100%;border:1px solid #c9c6bd;border-radius:8px"></p>
+<p><small>Fotos vom 19.10.2026: links der Raspberry Pi 5 im Acrylgehäuse, rechts das USB-Mikroskop im schwarzen 3D-gedruckten Halter; der Servo sitzt oben am Halter und greift mit dem kleinen Zahnrad in das große am Rändelrad. Darunter der Objektträger auf dem Fuß des Mikroskopstativs, die Beleuchtung kommt vom Schwanenhals.</small></p>
 <p>Ein einfaches USB-Mikroskop (Wandler Genesys Logic 05e3:f12b, 640 × 480 Bildpunkte, 30 Bilder/s, YUYV) hat ein Rändelrad zur Handverstellung der Schärfe. Dieses Rad wird nicht mehr von Hand gedreht, sondern von einem Modellbauservo über ein Zahnradpaar. Die Halterung ist im 3D-Druck gefertigt und trägt Mikroskop, Servo und beide Zahnräder in festem Abstand.</p>
 <table><tr><th>Teil</th><th>Angabe</th></tr>
 <tr><td>Rechner</td><td>Raspberry Pi 5 Model B, 4 GB, Raspberry Pi OS 12 (bookworm), Python 3.11, OpenCV 4.6; Name im Netz <code>mikroskop</code></td></tr>
@@ -65,6 +72,7 @@ code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;hei
 <h2>Die Bedienelemente</h2>
 <table><tr><th>Element</th><th>Was es tut</th></tr>
 <tr><td>Livebild</td><td>Bild der Kamera mit Schärfezahl, Servowinkel und dem grünen Messfenster (ROI, mittlere 33 % jeder Kante).</td></tr>
+<tr><td>Zoom</td><td>Elektronischer Zoom 1× bis 6× nur in der Anzeige: Schieberegler, Mausrad auf dem Bild, Ziehen verschiebt den Ausschnitt, Doppelklick zoomt auf die Stelle, „1×" und „Mitte" setzen zurück. Die Kamera liefert weiter 640 × 480; die Schärfemessung bleibt im vollen Bild, der Zoom ändert sie nicht.</td></tr>
 <tr><td>Autofokus</td><td>Voller Ablauf: Suchlauf über den ganzen Bereich, Stapel, Anfahrt, Ergebnis. Etwa 70 s.</td></tr>
 <tr><td>Nachfokus</td><td>Nur Stapel ±8° um die jetzige Stellung und Anfahrt. Etwa 30 s. Für kleine Änderungen, wenn der Gipfel schon in der Nähe liegt.</td></tr>
 <tr><td>Stopp</td><td>Bricht den laufenden Ablauf ab; der Servo bleibt, wo er ist.</td></tr>
@@ -190,4 +198,17 @@ for(const b of ['auto','nachfokus','plus','minus','fahre','h_stromlos','h_an'])$
 zeichne(z.kurve,z.max_winkel);$('kinfo').textContent=(z.kurve.length?`Kurve: ${z.kurve.length} Punkte · `:'')+`Kamera ${z.fps.toFixed(0)} Bilder/s`;
 const l=$('log');const unten=l.scrollTop+l.clientHeight>=l.scrollHeight-10;l.textContent=z.meldungen.join('\n');if(unten)l.scrollTop=l.scrollHeight;}catch(e){$('stand').textContent='Programm antwortet nicht — läuft der Dienst mikroskop-fokus?';}}
 /* GitHub Pages: kein Diener — nur die Beschreibung */
+// ---- elektronischer Zoom (nur die Anzeige; Schaerfe wird weiter im vollen Bild gemessen)
+(function(){const r=$('zoomrahmen'),im=$('bild'),sl=$('zoom'),wz=$('zoomwert');let z=1,tx=0,ty=0,zieh=null;
+function klemme(){const W=r.clientWidth,H=r.clientHeight;tx=Math.min(0,Math.max(W-W*z,tx));ty=Math.min(0,Math.max(H-H*z,ty));}
+function male(){klemme();im.style.transform=`translate(${tx}px,${ty}px) scale(${z})`;wz.textContent=z.toFixed(1).replace('.',',')+'×';sl.value=z;}
+function setze(nz,px,py){const W=r.clientWidth,H=r.clientHeight;nz=Math.min(6,Math.max(1,nz));if(px==null){px=W/2;py=H/2;}
+ const bx=(px-tx)/z,by=(py-ty)/z;z=nz;tx=px-bx*z;ty=py-by*z;male();}
+sl.oninput=()=>setze(parseFloat(sl.value));$('zoom1').onclick=()=>{z=1;tx=0;ty=0;male();};$('zoom_mitte').onclick=()=>{const W=r.clientWidth,H=r.clientHeight;tx=(W-W*z)/2;ty=(H-H*z)/2;male();};
+r.addEventListener('wheel',e=>{e.preventDefault();const b=r.getBoundingClientRect();setze(z*(e.deltaY<0?1.15:1/1.15),e.clientX-b.left,e.clientY-b.top);},{passive:false});
+r.addEventListener('dblclick',e=>{const b=r.getBoundingClientRect();setze(z<3?3:1,e.clientX-b.left,e.clientY-b.top);});
+r.addEventListener('pointerdown',e=>{zieh={x:e.clientX,y:e.clientY,tx,ty};r.setPointerCapture(e.pointerId);r.style.cursor='grabbing';});
+r.addEventListener('pointermove',e=>{if(!zieh)return;tx=zieh.tx+(e.clientX-zieh.x);ty=zieh.ty+(e.clientY-zieh.y);male();});
+r.addEventListener('pointerup',()=>{zieh=null;r.style.cursor='grab';});r.addEventListener('pointercancel',()=>{zieh=null;});
+male();})();
 </script></body></html>

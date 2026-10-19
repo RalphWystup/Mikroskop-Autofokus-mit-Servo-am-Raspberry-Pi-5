@@ -10,7 +10,9 @@ unter `http://mikroskop:8090` mit Bild, Kurve und Knöpfen.
 
 Ein einfaches USB-Mikroskop (640 × 480) wird von einem Modellbauservo über ein Zahnradpaar (1 : 2, 3D-gedruckte Halterung) am
 Rändelrad scharf gestellt. Ein Programm auf dem Raspberry Pi 5 misst die Bildschärfe (Tenengrad), fährt den Servo über die Hardware-PWM
-und findet den Gipfel in 70 s: Suchlauf, Stapel mit Parabel, Anfahrt von unten mit Nachprüfung über die Schärfe. Bedienung im Browser.
+und findet den Gipfel in 70 s: Suchlauf, Stapel mit Parabel, Anfahrt von unten mit Nachprüfung über die Schärfe. Bedienung im Browser, mit elektronischem Zoom in der Anzeige.
+
+![Der Aufbau: Raspberry Pi 5, USB-Mikroskop im 3D-gedruckten Halter, Servo am Rändelrad](bilder/aufbau_seite.jpg)
 
 ![Schärfe über dem Servowinkel](bilder/schaerfekurve_2026-10-18.png)
 
@@ -36,7 +38,7 @@ und findet den Gipfel in 70 s: Suchlauf, Stapel mit Parabel, Anfahrt von unten m
 | `pi/` | Dienst (`mikroskop-fokus.service`), Autostart-Fenster, `EINRICHTEN.md` |
 | `bruecke/pi.py` | der Weg der KI zum Pi: SSH mit Schlüssel über den Arbeitsrechner (kein Passwort gespeichert) |
 | `messung/` | die Messskripte (Stick-Slip, Hardware-PWM, Rütteln) und die Messdaten als CSV, Befundblatt |
-| `bilder/` | Schärfekurve, Fokusbild |
+| `bilder/` | Fotos des Aufbaus (19.10.2026), Schärfekurve, Fokusbild |
 
 Vorarbeit des Auftraggebers (April–Juni 2026, Servo+Schärfe_Funktioniert_*.py, autofocus_clean/) liegt auf dem Pi in
 `~/Desktop/historie_bis_2026-10-18/`; sie hatte das Schärfemaß bei 1,0 abgeschnitten (Plateau) und Software-PWM.

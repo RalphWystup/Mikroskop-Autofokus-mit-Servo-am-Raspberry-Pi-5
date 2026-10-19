@@ -9,7 +9,7 @@ Stand 19.10.2026. Fotos des Aufbaus: `../bilder/aufbau_seite.jpg`, `../bilder/au
 | Getriebe | kleines Zahnrad auf der Servowelle, großes Zahnrad auf der Welle zum Rändelrad, Untersetzung 1 : 2 |
 | Halterung | 3D-Druck, trägt Mikroskop, Servo und beide Räder in festem Abstand |
 | Beleuchtung | eingebaute LEDs des Mikroskops um das Objektiv (Auflicht), Helligkeit am Rädchen des USB-Kabels; keine zusätzliche Lampe; weißes Blatt als Hintergrund |
-| Stativ | Metallstange mit Klemmschraube, trägt Servomechanik und Mikroskop; grobe Höheneinstellung von Hand |
+| Stativ | Metallstange, trägt Servomechanik und Mikroskop; die große Rändelschraube stellt die Höhe von Hand grob ein |
 | Rechner | Raspberry Pi 5, 4 GB |
 
 **Noch nicht im Repositorium** (liegen beim Auftraggeber): die Druckdateien (STL/3MF) von Halterung und Zahnrädern, die Zähnezahlen,

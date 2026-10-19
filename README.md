@@ -43,6 +43,15 @@ und findet den Gipfel in 70 s: Suchlauf, Stapel mit Parabel, Anfahrt von unten m
 Vorarbeit des Auftraggebers (April–Juni 2026, Servo+Schärfe_Funktioniert_*.py, autofocus_clean/) liegt auf dem Pi in
 `~/Desktop/historie_bis_2026-10-18/`; sie hatte das Schärfemaß bei 1,0 abgeschnitten (Plateau) und Software-PWM.
 
+## Wie es entstanden ist
+
+An einem Tag, am laufenden Gerät: Die KI (Claude in Claude Code) arbeitete über eine Brücke auf dem Arbeitsrechner per SSH direkt auf
+dem Pi — Messprogramme geschrieben, aufgespielt, gelaufen, ausgewertet; Regler gebaut, aufgespielt, am Gerät gemessen; Dienst, Name,
+Autostart eingerichtet; alles ohne dass der Auftraggeber etwas eintippen oder installieren musste. Der Auftraggeber saß am Mikroskop,
+testete die Knöpfe und meldete, was nur er sehen oder hören konnte („knurrt", „springt", „zischt"). Jede Meldung wurde nachgestellt,
+gemessen und mit Zahlen beantwortet, dann korrigiert, dann wieder gemessen. Eingriffe (Neustart, config.txt, Löschen, Veröffentlichen)
+nur auf sein Wort. Die Zeitleiste steht auf der Seite im Reiter „Zusammenarbeit mit der KI".
+
 ## Quellen
 
 - J. Knapper et al., Fast, high-precision autofocus on a motorised microscope (OpenFlexure), Journal of Microscopy 2022, arXiv 2109.06842 — Anfahrt aus einer Richtung, Stapel mit Polynom.

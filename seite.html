@@ -46,7 +46,8 @@ code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;hei
 <tr><td>Rechner</td><td>Raspberry Pi 5 Model B, 4 GB, Raspberry Pi OS 12 (bookworm), Python 3.11, OpenCV 4.6; Name im Netz <code>mikroskop</code></td></tr>
 <tr><td>Kamera</td><td>USB-Mikroskop an USB 2.0, <code>/dev/video0</code>; Regler: Helligkeit, Kontrast, Gamma, Schärfe (bleiben auf Vorgabe)</td></tr>
 <tr><td>Beleuchtung</td><td>Im Mikroskop eingebaute LEDs rund um das Objektiv (Auflicht), Helligkeit am Rädchen des USB-Kabels; keine zusätzliche Lampe. Die Probe wird von oben beleuchtet, der Hintergrund ist ein weißes Blatt unter dem Objektträger.</td></tr>
-<tr><td>Servo</td><td>Modellbauservo, Stellbereich 0–180° bei Impulsen von 0,40 bis 2,40 ms, 50 Hz; Signal an GPIO 18 (Hardware-PWM, PWM0-Kanal 2), Versorgung 5 V, Masse gemeinsam mit dem Pi</td></tr>
+<tr><td>Servo</td><td>Modellbauservo, Stellbereich 0–180° bei Impulsen von 0,40 bis 2,40 ms, 50 Hz; Signal an GPIO 18 (Hardware-PWM, PWM0-Kanal 2); Versorgung direkt vom 5-V-Pin des Pi, Masse gemeinsam</td></tr>
+<tr><td>Stromversorgung</td><td>Ein Netzteil für alles: 5,1 V, 3 A am USB-C des Pi (Vorgabe für den Pi 5 sind 5,1 V / 5 A; die 3 A reichen hier, weil nur Kamera und ein Servo hängen). Der Servo zieht beim Fahren kurz einige hundert Milliampere; gemessen stört das weder Kamera noch Pi — am 19.10.2026 nachgesehen: <code>vcgencmd get_throttled</code> = 0x0, keine Unterspannung seit dem Start.</td></tr>
 <tr><td>Getriebe</td><td>Kleines Zahnrad auf der Servowelle, großes Zahnrad auf der Welle, die das Rändelrad des Mikroskops mitnimmt: Untersetzung 1 : 2. Ein Grad am Servo sind 0,5° am Mikroskoprad.</td></tr>
 <tr><td>Halterung</td><td>3D-Druck; Zahnräder und Mitnahme am Rändelrad sind die Stellen, an denen das gemessene Spiel von 4,6° (am Servo) entsteht</td></tr>
 <tr><td>Stativ</td><td>Metallstange, an der Servomechanik und Mikroskop zusammen sitzen; die große Rändelschraube an der Stange stellt das Ganze von Hand grob in der Höhe ein, danach stellt nur noch der Servo</td></tr></table>
@@ -54,7 +55,7 @@ code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;hei
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" font-family="system-ui,Segoe UI,sans-serif" font-size="12" style="background:#fff;border:1px solid #c9c6bd;border-radius:8px">
 <defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6b6962"/></marker></defs>
 <rect x="16" y="40" width="220" height="130" rx="8" fill="#e6f4ea" stroke="#2e7d32" stroke-width="1.5"/><text x="28" y="62" font-weight="700" font-size="13">Raspberry Pi 5</text>
-<text x="28" y="84">USB 2.0 → Mikroskop</text><text x="28" y="104">GPIO 18 (Pin 12) → Servo Signal</text><text x="28" y="124">5 V (Pin 2) → Servo +</text><text x="28" y="144">GND (Pin 6) → Servo −</text><text x="28" y="162" fill="#6b6962">Ethernet/WLAN → Heimnetz, Port 8090</text>
+<text x="28" y="84">USB 2.0 → Mikroskop</text><text x="28" y="104">GPIO 18 (Pin 12) → Servo Signal</text><text x="28" y="124">5 V (Pin 2) → Servo + (vom Pi)</text><text x="28" y="144">GND (Pin 6) → Servo −</text><text x="28" y="162" fill="#6b6962">Ethernet/WLAN → Heimnetz, Port 8090</text>
 <rect x="330" y="40" width="200" height="130" rx="8" fill="#fff3c4" stroke="#c9a227" stroke-width="1.5"/><text x="342" y="62" font-weight="700" font-size="13">Servo</text>
 <text x="342" y="84">Signal: Puls 0,40–2,40 ms</text><text x="342" y="104">alle 20 ms (50 Hz)</text><text x="342" y="124">0° … 180°</text><text x="342" y="150" fill="#6b6962">kleines Zahnrad auf der Welle</text>
 <rect x="620" y="40" width="320" height="130" rx="8" fill="#e8f0fb" stroke="#1f4e9e" stroke-width="1.5"/><text x="632" y="62" font-weight="700" font-size="13">Mikroskop (USB)</text>
@@ -62,7 +63,8 @@ code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;hei
 <line x1="236" y1="104" x2="330" y2="104" stroke="#6b6962" stroke-width="1.6" marker-end="url(#pf)"/><text x="283" y="96" text-anchor="middle" fill="#6b6962">3 Adern</text>
 <line x1="530" y1="104" x2="620" y2="104" stroke="#6b6962" stroke-width="1.6" marker-end="url(#pf)"/><text x="575" y="96" text-anchor="middle" fill="#6b6962">1 : 2</text>
 <path d="M 780 170 L 780 220 L 126 220 L 126 170" fill="none" stroke="#6b6962" stroke-width="1.6" marker-end="url(#pf)"/><text x="450" y="240" text-anchor="middle" fill="#6b6962">USB: Bilder zurück zum Pi — der Regelkreis schließt sich über die Schärfe im Bild</text>
-<text x="16" y="282" fill="#6b6962">Hardware-PWM: /boot/firmware/config.txt → dtoverlay=pwm-2chan; GPIO 18 = /sys/class/pwm/pwmchip0/pwm2 (Periode 20 000 000 ns, Tastdauer in ns)</text>
+<text x="16" y="266" fill="#6b6962">Versorgung: ein Netzteil 5,1 V / 3 A am USB-C des Pi; der Servo hängt am 5-V-Pin des Pi, kein zweites Netzteil</text>
+<text x="16" y="284" fill="#6b6962">Hardware-PWM: /boot/firmware/config.txt → dtoverlay=pwm-2chan; GPIO 18 = /sys/class/pwm/pwmchip0/pwm2 (Periode 20 000 000 ns, Tastdauer in ns)</text>
 </svg>
 <h2>Was das Getriebe für die Regelung bedeutet</h2>
 <p>Die Untersetzung halbiert die Bewegung: 0,3° Servoschritt sind 0,15° am Rändelrad. Die Halbwertsbreite des Schärfegipfels von 1,4 bis 3° am Servo entspricht 0,7 bis 1,5° am Rad. Das Spiel von 4,6° am Servo (2,3° am Rad) ist größer als der Gipfel; darum muss jede Anfahrt aus derselben Richtung kommen, sonst landet der Servo neben dem Gipfel, obwohl der Befehl stimmt. Die Rückstellkraft, die den Servo im Stand knurren lässt, kommt aus Mikroskopmechanik und Zahneingriff; sie ist mit dem gewählten Aufbau nicht zu beseitigen, nur zu beherrschen (Haltung wählbar).</p>

@@ -39,8 +39,8 @@ code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;hei
 <section id="hardware"><div class="text">
 <h2>Der Aufbau</h2>
 <p><img src="bilder/aufbau_seite.jpg" alt="Aufbau von der Seite: Raspberry Pi 5 im Acrylgehäuse, USB-Mikroskop im 3D-gedruckten Halter, Servo oben, Objektträger auf dem Fuß" style="max-width:100%;border:1px solid #c9c6bd;border-radius:8px"></p>
-<p><img src="bilder/aufbau_oben.jpg" alt="Aufbau von oben: Servo mit Zahnrad am Rändelrad des Mikroskops, eingebaute LED-Beleuchtung des Mikroskops" style="max-width:100%;border:1px solid #c9c6bd;border-radius:8px"></p>
-<p><small>Fotos vom 19.10.2026: links der Raspberry Pi 5 im Acrylgehäuse, rechts das USB-Mikroskop im schwarzen 3D-gedruckten Halter; der Servo sitzt oben am Halter und greift mit dem kleinen Zahnrad in das große am Rändelrad. Darunter der Objektträger auf dem Fuß des Mikroskopstativs. Die Beleuchtung erzeugt das USB-Mikroskop selbst mit seinen eingebauten LEDs um das Objektiv (Auflicht); der Schwanenhals ist nur die Halterung des Stativs, keine Lampe.</small></p>
+<p><img src="bilder/aufbau_oben.jpg" alt="Aufbau von oben: Servo mit Zahnrad am Rändelrad des Mikroskops, Stativstange zur groben Höheneinstellung" style="max-width:100%;border:1px solid #c9c6bd;border-radius:8px"></p>
+<p><small>Fotos vom 19.10.2026: links der Raspberry Pi 5 im Acrylgehäuse, rechts das USB-Mikroskop im schwarzen 3D-gedruckten Halter; der Servo sitzt oben am Halter und greift mit dem kleinen Zahnrad in das große am Rändelrad. Darunter der Objektträger auf dem Fuß des Mikroskopstativs. Die Beleuchtung erzeugt das USB-Mikroskop selbst mit seinen eingebauten LEDs um das Objektiv (Auflicht). Die Metallstange ist das Stativ: An ihr sind Servomechanik und Mikroskop befestigt; mit der Klemmschraube wird das Ganze von Hand grob in der Höhe eingestellt, der Servo übernimmt dann die Feineinstellung am Rändelrad.</small></p>
 <p>Ein einfaches USB-Mikroskop (Wandler Genesys Logic 05e3:f12b, 640 × 480 Bildpunkte, 30 Bilder/s, YUYV) hat ein Rändelrad zur Handverstellung der Schärfe. Dieses Rad wird nicht mehr von Hand gedreht, sondern von einem Modellbauservo über ein Zahnradpaar. Die Halterung ist im 3D-Druck gefertigt und trägt Mikroskop, Servo und beide Zahnräder in festem Abstand.</p>
 <table><tr><th>Teil</th><th>Angabe</th></tr>
 <tr><td>Rechner</td><td>Raspberry Pi 5 Model B, 4 GB, Raspberry Pi OS 12 (bookworm), Python 3.11, OpenCV 4.6; Name im Netz <code>mikroskop</code></td></tr>
@@ -48,7 +48,8 @@ code{background:#eceae4;padding:1px 4px;border-radius:4px}svg{max-width:100%;hei
 <tr><td>Beleuchtung</td><td>Im Mikroskop eingebaute LEDs rund um das Objektiv (Auflicht), Helligkeit am Rädchen des USB-Kabels; keine zusätzliche Lampe. Die Probe wird von oben beleuchtet, der Hintergrund ist ein weißes Blatt unter dem Objektträger.</td></tr>
 <tr><td>Servo</td><td>Modellbauservo, Stellbereich 0–180° bei Impulsen von 0,40 bis 2,40 ms, 50 Hz; Signal an GPIO 18 (Hardware-PWM, PWM0-Kanal 2), Versorgung 5 V, Masse gemeinsam mit dem Pi</td></tr>
 <tr><td>Getriebe</td><td>Kleines Zahnrad auf der Servowelle, großes Zahnrad auf der Welle, die das Rändelrad des Mikroskops mitnimmt: Untersetzung 1 : 2. Ein Grad am Servo sind 0,5° am Mikroskoprad.</td></tr>
-<tr><td>Halterung</td><td>3D-Druck; Zahnräder und Mitnahme am Rändelrad sind die Stellen, an denen das gemessene Spiel von 4,6° (am Servo) entsteht</td></tr></table>
+<tr><td>Halterung</td><td>3D-Druck; Zahnräder und Mitnahme am Rändelrad sind die Stellen, an denen das gemessene Spiel von 4,6° (am Servo) entsteht</td></tr>
+<tr><td>Stativ</td><td>Metallstange mit Klemmschraube, an der Servomechanik und Mikroskop zusammen sitzen; grobe Höheneinstellung von Hand, danach stellt nur noch der Servo</td></tr></table>
 <h2>Verschaltung</h2>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" font-family="system-ui,Segoe UI,sans-serif" font-size="12" style="background:#fff;border:1px solid #c9c6bd;border-radius:8px">
 <defs><marker id="pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6b6962"/></marker></defs>

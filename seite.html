@@ -1,4 +1,27 @@
-<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mikroskop-Fokus</title>
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<!-- kopfangaben:anfang -->
+<meta name="description" content="Ein einfaches USB-Mikroskop wird von einem Servo über ein Zahnradpaar scharf gestellt. Hardware-PWM gegen das Zittern, Anfahrt immer von unten gegen das Getriebespiel, Tenengrad und Parabel für den Gipfel, Bedienung im Browser. Mit Manuskript der Methoden und allen Messungen vom 18.10.2026.">
+<meta name="author" content="Prof. Dr.-Ing. Ralph Wystup M.Sc.">
+<meta name="keywords" content="Autofokus, Servo, Raspberry Pi 5, Hardware-PWM, Getriebespiel, Tenengrad, OpenCV, Mikroskopie">
+<link rel="canonical" href="https://ralphwystup.github.io/Mikroskop-Autofokus-mit-Servo-am-Raspberry-Pi-5/">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="Ralph Wystup — Elektrotechnik">
+<meta property="og:title" content="Mikroskop-Autofokus mit Servo am Raspberry Pi 5">
+<meta property="og:description" content="Ein einfaches USB-Mikroskop wird von einem Servo über ein Zahnradpaar scharf gestellt. Hardware-PWM gegen das Zittern, Anfahrt immer von unten gegen das Getriebespiel, Tenengrad und Parabel für den Gipfel, Bedienung im Browser. Mit Manuskript der Methoden und allen Messungen vom 18.10.2026.">
+<meta property="og:url" content="https://ralphwystup.github.io/Mikroskop-Autofokus-mit-Servo-am-Raspberry-Pi-5/seite.html">
+<meta property="og:image" content="https://ralphwystup.github.io/Foto_Ralph_Wystup.jpg">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle","headline":"Mikroskop-Autofokus mit Servo am Raspberry Pi 5",
+ "description":"Ein einfaches USB-Mikroskop wird von einem Servo über ein Zahnradpaar scharf gestellt. Hardware-PWM gegen das Zittern, Anfahrt immer von unten gegen das Getriebespiel, Tenengrad und Parabel für den Gipfel, Bedienung im Browser. Mit Manuskript der Methoden und allen Messungen vom 18.10.2026.","url":"https://ralphwystup.github.io/Mikroskop-Autofokus-mit-Servo-am-Raspberry-Pi-5/","inLanguage":"de",
+ "license":"https://opensource.org/licenses/MIT",
+ "author":{"@type":"Person","name":"Prof. Dr.-Ing. Ralph Wystup M.Sc.","url":"https://ralphwystup.github.io/"},
+ "publisher":{"@type":"Person","name":"Prof. Dr.-Ing. Ralph Wystup M.Sc."},
+ "isPartOf":{"@type":"Collection","name":"Lehr- und Laborarbeiten zur Elektrotechnik","url":"https://ralphwystup.github.io/"},
+ "keywords":"Autofokus, Servo, Raspberry Pi 5, Hardware-PWM, Getriebespiel, Tenengrad, OpenCV, Mikroskopie"}
+</script>
+<!-- kopfangaben:ende --><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mikroskop-Fokus</title>
 <style>
 :root{--bg:#f4f3ef;--fg:#1d1d1b;--rand:#c9c6bd;--kasten:#fff;--grau:#6b6962;--blau:#1f4e9e;--rot:#b3261e}
 body{font:15px/1.45 system-ui,"Segoe UI",sans-serif;margin:0;background:var(--bg);color:var(--fg)}
